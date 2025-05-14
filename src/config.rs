@@ -1,4 +1,5 @@
 use clap::{Arg, Command};
+use std::process;
 
 pub fn parse_arguments() -> (String, usize, u64, u32) {
     let args = Command::new("Website Status Checker")
@@ -11,7 +12,7 @@ pub fn parse_arguments() -> (String, usize, u64, u32) {
                 .long("file")
                 .value_name("FILE")
                 .help("File containing a list of URLs")
-                .default_value("sites.txt"),
+                .default_value("urls.txt"),
         )
         .arg(
             Arg::new("workers")
@@ -40,6 +41,10 @@ pub fn parse_arguments() -> (String, usize, u64, u32) {
         .get_matches();
 
     let input_file = args.get_one::<String>("file").unwrap().to_string();
+    if input_file.is_empty() {
+        eprintln!("Error: You must supply a --file.");
+        process::exit(2);
+    }
     let max_workers = args
         .get_one::<String>("workers")
         .unwrap()
