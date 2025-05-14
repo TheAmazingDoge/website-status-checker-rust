@@ -1,10 +1,9 @@
 use reqwest::blocking::ClientBuilder;
 use serde::Serialize;
 use std::sync::Mutex;
-use chrono::{DateTime, Utc};
-use std::time::{Duration, SystemTime};
+use chrono::{DateTime, Utc, Duration};
+use std::time::{SystemTime, Duration as StdDuration};
 use std::thread;
-
 
 #[derive(Serialize, Clone)]
 pub enum WebsiteState {
@@ -19,7 +18,7 @@ pub struct Website {
     pub is_checked: bool,
     pub action_status: WebsiteState,
     pub response_time: Option<f64>,
-    pub timestamp: Option<String>,
+    pub timestamp: Option<String>, // Central Time timestamp
 }
 
 impl Website {
@@ -35,7 +34,7 @@ impl Website {
 
     pub fn fetch_status(&mut self, timeout: u64, retries: u32) {
         let client = ClientBuilder::new()
-            .timeout(Duration::from_secs(timeout))
+            .timeout(StdDuration::from_secs(timeout))
             .build()
             .expect("Failed to build HTTP client");
 
@@ -49,11 +48,12 @@ impl Website {
                         let seconds = duration.as_secs() as f64 + duration.subsec_millis() as f64 / 1000.0;
                         (seconds * 100.0).round() / 100.0 // Round to 2 decimal places
                     });
-                    self.timestamp = Some(
-                        DateTime::<Utc>::from(SystemTime::now())
-                            .format("%Y-%m-%d %H:%M:%S")
-                            .to_string(),
-                    );
+
+                    // Subtract 6 hours from UTC to get Central Time
+                    let utc_time = DateTime::<Utc>::from(SystemTime::now());
+                    let central_time = utc_time - Duration::hours(5);
+                    self.timestamp = Some(central_time.format("%Y-%m-%d %H:%M:%S").to_string());
+
                     self.is_checked = true;
                     WebsiteState::Response(res.status().as_u16())
                 }
@@ -64,16 +64,17 @@ impl Website {
                             let seconds = duration.as_secs() as f64 + duration.subsec_millis() as f64 / 1000.0;
                             (seconds * 100.0).round() / 100.0
                         });
-                        self.timestamp = Some(
-                            DateTime::<Utc>::from(SystemTime::now())
-                                .format("%Y-%m-%d %H:%M:%S")
-                                .to_string(),
-                        );
+
+                        // Subtract 6 hours from UTC for errors
+                        let utc_time = DateTime::<Utc>::from(SystemTime::now());
+                        let central_time = utc_time - Duration::hours(6);
+                        self.timestamp = Some(central_time.format("%Y-%m-%d %H:%M:%S").to_string());
+
                         self.is_checked = true;
                         self.action_status = WebsiteState::NetworkError("Network error".to_string());
                         break;
                     }
-                    thread::sleep(Duration::from_millis(100)); // Wait 100 ms before retrying
+                    thread::sleep(StdDuration::from_millis(100)); // Wait 100 ms before retrying
                     continue;
                 }
             };
