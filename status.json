@@ -1,0 +1,29 @@
+[
+  {
+    "url": "https://google.com",
+    "is_checked": true,
+    "action_status": {
+      "Response": 200
+    },
+    "response_time": 0.36,
+    "timestamp": "2025-05-14 01:56:12"
+  },
+  {
+    "url": "https://rust-lang.org",
+    "is_checked": true,
+    "action_status": {
+      "Response": 200
+    },
+    "response_time": 0.59,
+    "timestamp": "2025-05-14 01:56:12"
+  },
+  {
+    "url": "https://somerandomlinkthatshouldnotwork.com",
+    "is_checked": true,
+    "action_status": {
+      "NetworkError": "Network error"
+    },
+    "response_time": 0.37,
+    "timestamp": "2025-05-14 01:56:12"
+  }
+]
